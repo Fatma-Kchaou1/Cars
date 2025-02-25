@@ -23,4 +23,6 @@ if __name__ == '__main__':
     car.drive(100) #117.5-5=112.5
     # la voiture a conduit 150 kilomètres au total (50 + 100)
     print(f"Mileage: {car.mileage}, Fuel: {car.fuel}")
+
+
 #Représente une voiture avec trois attributs : fuel (carburant), mileage (kilométrage) et engine_on (état du moteur).
