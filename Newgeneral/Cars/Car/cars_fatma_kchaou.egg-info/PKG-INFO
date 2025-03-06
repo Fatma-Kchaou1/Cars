@@ -1,0 +1,13 @@
+Metadata-Version: 2.1
+Name: cars-fatma-kchaou
+Version: 0.2.10
+Summary: Ce projet vise à développer des compétences en gestion de projet logiciel, en mettant l'accent sur la gestion de version, la compilation, la protection du code et le déploiement dans un environnement cible.
+Author: FatmaKchaou
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.10
+Requires-Dist: numpy
+Requires-Dist: requests
+Provides-Extra: dev
+Requires-Dist: twine>=6.1.2; extra == "dev"
