@@ -1,6 +1,6 @@
 # main.py
 
-from General.Cars.Car import Car # Importation de la classe Car depuis le module Car.py
+from Newgeneral.Cars.Car import Car # Importation de la classe Car depuis le module Car.py
 
 def main():
     car = Car()  # Crée une instance de la classe Car
