@@ -1,0 +1,90 @@
+stages:
+  - build
+  - compile
+  - unzip
+  - check
+  - protect
+
+# Étape 1 : Build
+build:
+  stage: build
+  image: python:3.10  # Utilisez une image Docker avec Python 3.10
+  script:
+    - echo "Checking Python..."
+    - python --version || (echo "Python 3.10 required" && exit 1)  # Vérifier la version de Python
+    - echo "Création de l'environnement virtuel..."
+    - pip install --upgrade pip  # Mettre à jour pip
+    - pip install virtualenv  # Installer virtualenv
+    - virtualenv venv  # Créer l'environnement virtuel
+    - source venv/bin/activate  # Activer l'environnement virtuel
+    - echo "Environnement virtuel activé."
+    - echo "Installation des dépendances..."
+    - pip install setuptools wheel  # Installer setuptools et wheel
+    - pip install -r PackageTag.egg-info/requires.txt
+  artifacts:
+    paths:
+      - venv/
+      - PackageTag.egg-info/
+
+# Étape 2 : Compilation avec Nuitka
+compile:
+  stage: compile
+  image: python:3.10  # Utiliser une image avec Python
+  script:
+    - echo "Installation de Nuitka..."
+    - pip install nuitka
+    - echo "Nuitka installé."
+    - echo "Installation de patchelf..."
+    - apt-get update && apt-get install -y patchelf
+    - echo "Patchelf installé."
+    - echo "Compilation avec Nuitka..."
+    - nuitka --standalone --onefile Package/exemple.py
+    - echo "Compilation terminée."
+  artifacts:
+    paths:
+      - dist/
+
+# Étape 3 : Dézipper le fichier .whl
+unzip_wheel:
+  stage: unzip
+  image: python:3.10
+  script:
+    - echo "Décompression du fichier .whl..."
+    - python -c "import zipfile; zipfile.ZipFile('dist/PackageTag-0.0.0-py3-none-any.whl', 'r').extractall('whl_extracted')"
+  artifacts:
+    paths:
+      - whl_extracted/  # Sauvegarder le répertoire des fichiers extraits
+
+# Étape 4 : Vérifier la présence de setup.cfg
+check_setup_cfg:
+  stage: check
+  script:
+    - echo "Vérification de setup.cfg..."
+    - test -f "whl_extracted/setup.cfg" && echo "setup.cfg trouvé" || { echo "setup.cfg manquant"; exit 1; }
+
+# Étape 5 : Extraire la version de setup.cfg
+extract_version:
+  stage: check
+  script:
+    - echo "Extraction de la version depuis setup.cfg..."
+    - set -e
+    - |
+      version=$(grep '^version' whl_extracted/setup.cfg | cut -d'=' -f2 | tr -d '[:space:]')
+      echo "Version trouvée : $version"
+    - echo $version > version.txt  # Enregistrer la version extraite
+  artifacts:
+    paths:
+      - version.txt
+
+# Étape 6 : Protection du fichier .whl
+protect:
+  stage: protect
+  image: mcr.microsoft.com/powershell:7.2-ubuntu-20.04  # Image Docker avec PowerShell
+  script:
+    - echo "Exécution du script de protection..."
+    - pwsh ./protect.ps1  # Exécution du script protect.ps1
+  dependencies:
+    - unzip_wheel  # Dépend de l'étape unzip_wheel
+  artifacts:
+    paths:
+      - whl_extracted/  # Sauvegarder les fichiers protégés
